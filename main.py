@@ -11,7 +11,11 @@ intents.message_content = True  # メッセージ内容を読み取るために�
 
 bot = discord.Client(intents=intents)
 # client = OpenAI(api_key=env.openai_api_key)  # 環境変数から取得
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))  # 環境変数から取得
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise ValueError("OPENAI_API_KEY が環境変数から取得できません。")
+
+client = OpenAI(api_key=api_key)
 
 @bot.event
 async def on_ready():
