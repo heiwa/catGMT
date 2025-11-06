@@ -5,8 +5,11 @@ from openai import OpenAI
 # import env
 import os
 
+# インテントの設定
+intents = discord.Intents.default()
+intents.message_content = True  # メッセージ内容を読み取るために必要
 
-bot = discord.Client()
+bot = discord.Client(intents=intents)
 # client = OpenAI(api_key=env.openai_api_key)  # 環境変数から取得
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))  # 環境変数から取得
 
