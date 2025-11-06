@@ -2,7 +2,7 @@ import discord
 # from discord import HTTPException
 
 from openai import OpenAI
-import env
+# import env
 import os
 
 
