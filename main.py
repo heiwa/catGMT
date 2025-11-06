@@ -3,9 +3,12 @@ import discord
 
 from openai import OpenAI
 import env
+import os
+
 
 bot = discord.Client()
-client = OpenAI(api_key=env.openai_api_key)  # 環境変数から取得
+# client = OpenAI(api_key=env.openai_api_key)  # 環境変数から取得
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))  # 環境変数から取得
 
 @bot.event
 async def on_ready():
@@ -47,4 +50,5 @@ def callCatGMT(prompt: str) -> str:
     )
     return response.choices[0].message.content  
 
-bot.run(env.token)
+# bot.run(env.token)
+bot.run(os.getenv("DISCORD_BOT_TOKEN"))
