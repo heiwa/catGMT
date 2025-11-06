@@ -5,6 +5,8 @@ from openai import OpenAI
 # import env
 import os
 
+print("環境変数一覧:", list(os.environ.keys()))
+
 # インテントの設定
 intents = discord.Intents.default()
 intents.message_content = True  # メッセージ内容を読み取るために必要
