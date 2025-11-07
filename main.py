@@ -9,6 +9,7 @@ print("環境変数一覧:", list(os.environ.keys()))
 
 # インテントの設定
 intents = discord.Intents.default()
+intents.voice_states = True  # ボイスステートを読み取るために必要
 intents.message_content = True  # メッセージ内容を読み取るために必要
 
 bot = discord.Client(intents=intents)
@@ -29,12 +30,25 @@ async def on_message(message):
         return
     
     if bot.user in message.mentions:
+        print(f" メンションを受け取りました: {message.content} ")
         if "おいす" in message.content:
             await message.channel.send("おいす")
             return
         
         resp = callCatGMT(message.content)
         await message.channel.send(resp)
+
+@bot.event
+async def on_voice_state_update(member, before, after):
+    if member.bot:
+        return  # ボットの状態変化は無視するにゃ
+
+    if not before.self_stream and after.self_stream:
+        # ユーザが配信を開始したにゃ
+        channel = discord.utils.get(member.guild.text_channels, name='catgmt')
+        if channel:
+            await channel.send(f"{member.mention}、何を配信してるにゃ？")
+
 
 def callCatGMT(prompt: str) -> str:
     response = client.chat.completions.create(
