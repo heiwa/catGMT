@@ -72,7 +72,7 @@ async def createMessageFromHistory(channel: discord.TextChannel, newUserMessage:
             ),
         }
     ]
-    async for msg in channel.history(limit=15, oldest_first=True):
+    async for msg in channel.history(limit=15):
         if msg.author == bot.user:
             resultMessage.append({
                 "role": "assistant",
@@ -83,7 +83,7 @@ async def createMessageFromHistory(channel: discord.TextChannel, newUserMessage:
                 "role": "user",
                 "content": msg.content
             })
-
+    resultMessage = list(reversed(resultMessage))
     resultMessage.append({
         "role": "user",
         "content": newUserMessage
