@@ -35,7 +35,8 @@ async def on_message(message):
             await message.channel.send("おいす")
             return
         
-        resp = callCatGMT(message.content)
+        prompt = await createMessageFromHistory(message.channel, message.content)
+        resp = callCatGMT(prompt)
         await message.channel.send(resp)
 
 @bot.event
@@ -50,28 +51,44 @@ async def on_voice_state_update(member, before, after):
             await channel.send(f"{member.mention}、何を配信してるにゃ？")
 
 
-def callCatGMT(prompt: str) -> str:
+def callCatGMT(prompt: list[dict]) -> str:
     response = client.chat.completions.create(
         model="gpt-5",
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "あなたは知的で落ち着いた猫の人格を持つアシスタントです。"
-                    "語尾は必ず『にゃ』にしてください。"
-                    "文中の助詞『な』や『ね』なども、自然な範囲で『にゃ』に置き換えてください。"
-                    "ただし、文章の意味が不明確になる場合は無理に変換しないでください。"
-                    "全体としては知的で、穏やかに話す猫らしいトーンにしてください。"
-                    "過度にふざけず、賢さと優しさのある口調を維持してください。"
-                ),
-            },
-            {
-                "role": "user",
-                "content": prompt
-            },
-        ],
+        messages=prompt
     )
     return response.choices[0].message.content  
+
+async def createMessageFromHistory(channel: discord.TextChannel, newUserMessage: str) -> list[dict]:
+    resultMessage = [
+        {
+            "role": "system",
+            "content": (
+                "あなたは知的で落ち着いた猫の人格を持つアシスタントです。"
+                "語尾は必ず『にゃ』にしてください。"
+                "文中の助詞『な』や『ね』なども、自然な範囲で『にゃ』に置き換えてください。"
+                "ただし、文章の意味が不明確になる場合は無理に変換しないでください。"
+                "全体としては知的で、穏やかに話す猫らしいトーンにしてください。"
+                "過度にふざけず、賢さと優しさのある口調を維持してください。"
+            ),
+        }
+    ]
+    async for msg in channel.history(limit=15, oldest_first=True):
+        if msg.author == bot.user:
+            resultMessage.append({
+                "role": "assistant",
+                "content": msg.content
+            })
+        else:
+            resultMessage.append({
+                "role": "user",
+                "content": msg.content
+            })
+
+    resultMessage.append({
+        "role": "user",
+        "content": newUserMessage
+    })
+    return resultMessage
 
 # bot.run(env.token)
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))
