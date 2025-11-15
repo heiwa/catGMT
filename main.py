@@ -74,21 +74,21 @@ async def on_message(message):
         resp = callCatGMT(prompt)
         await message.channel.send(resp)
 
-@bot.event
-async def on_voice_state_update(member, before, after):
-    if member.bot:
-        return  # ボットの状態変化は無視するにゃ
+# @bot.event
+# async def on_voice_state_update(member, before, after):
+#     if member.bot:
+#         return  # ボットの状態変化は無視するにゃ
 
-    if before.channel is None and after.channel is not None:
-        # ユーザがボイスチャンネルに参加したにゃ
-        channel = discord.utils.get(member.guild.text_channels, name='catgmt')
-        if channel:
-            await channel.send(f"{member.mention}、ボイスチャンネルに参加したにゃ！")
-    # if not before.self_stream and after.self_stream:
-    #     # ユーザが配信を開始したにゃ
-    #     channel = discord.utils.get(member.guild.text_channels, name='catgmt')
-    #     if channel:
-    #         await channel.send(f"{member.mention}、何を配信してるにゃ？")
+#     if before.channel is None and after.channel is not None:
+#         # ユーザがボイスチャンネルに参加したにゃ
+#         channel = discord.utils.get(member.guild.text_channels, name='catgmt')
+#         if channel:
+#             await channel.send(f"{member.mention}、ボイスチャンネルに参加したにゃ！")
+#     # if not before.self_stream and after.self_stream:
+#     #     # ユーザが配信を開始したにゃ
+#     #     channel = discord.utils.get(member.guild.text_channels, name='catgmt')
+#     #     if channel:
+#     #         await channel.send(f"{member.mention}、何を配信してるにゃ？")
 
 
 def callCatGMT(prompt: list[dict]) -> str:
