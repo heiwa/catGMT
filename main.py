@@ -30,18 +30,14 @@ async def on_voice_state_update(member, before, after):
     # ボイスチャンネルに参加した場合
     if before.channel != after.channel and after.channel is not None:
         # ボット以外のメンバー数を確認
-        human_members = [m for m in after.channel.members if not m.bot]
-        
-        if len(human_members) == 1:
+        if len(after.channel.members) == 1:
             # 最初の参加者
             await on_first_member_joined(member, after.channel)
     
     # ボイスチャンネルから退出した場合
     if before.channel is not None and after.channel != before.channel:
         # 退出後のチャンネルメンバー数を確認
-        remaining_members = [m for m in before.channel.members if not m.bot]
-        
-        if len(remaining_members) == 0:
+        if len(before.channel.members) == 0:
             # チャンネルが空になった
             await on_channel_empty(before.channel)
 
