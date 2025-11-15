@@ -25,6 +25,45 @@ async def on_ready():
     print(f'We have logged in as {bot.user}')
 
 @bot.event
+async def on_voice_state_update(member, before, after):
+    """ボイスチャンネルの状態変化を監視"""
+    # ボイスチャンネルに参加した場合
+    if before.channel != after.channel and after.channel is not None:
+        # ボット以外のメンバー数を確認
+        human_members = [m for m in after.channel.members if not m.bot]
+        
+        if len(human_members) == 1:
+            # 最初の参加者
+            await on_first_member_joined(member, after.channel)
+    
+    # ボイスチャンネルから退出した場合
+    if before.channel is not None and after.channel != before.channel:
+        # 退出後のチャンネルメンバー数を確認
+        remaining_members = [m for m in before.channel.members if not m.bot]
+        
+        if len(remaining_members) == 0:
+            # チャンネルが空になった
+            await on_channel_empty(before.channel)
+
+async def on_first_member_joined(member, channel):
+    """最初のメンバーが参加したときの処理"""
+    print(f"{member.display_name} がみんなを待ってるにゃ！")
+    
+    # テキストチャンネルに通知（generalチャンネルがある場合）
+    text_channel = discord.utils.get(member.guild.text_channels, name="catgmt")
+    if text_channel:
+        await text_channel.send(f"@here ,{member.display_name} がみんなを待ってるにゃ！")
+
+async def on_channel_empty(channel):
+    """チャンネルが空になったときの処理"""
+    print(f"みんないなくなったにゃ！")
+    
+    # テキストチャンネルに通知
+    text_channel = discord.utils.get(channel.guild.text_channels, name="catgmt")
+    if text_channel:
+        await text_channel.send(f"いい夢見るにゃ！")
+
+@bot.event
 async def on_message(message):
     if message.author == bot.user:
         return
@@ -44,11 +83,16 @@ async def on_voice_state_update(member, before, after):
     if member.bot:
         return  # ボットの状態変化は無視するにゃ
 
-    if not before.self_stream and after.self_stream:
-        # ユーザが配信を開始したにゃ
+    if before.channel is None and after.channel is not None:
+        # ユーザがボイスチャンネルに参加したにゃ
         channel = discord.utils.get(member.guild.text_channels, name='catgmt')
         if channel:
-            await channel.send(f"{member.mention}、何を配信してるにゃ？")
+            await channel.send(f"{member.mention}、ボイスチャンネルに参加したにゃ！")
+    # if not before.self_stream and after.self_stream:
+    #     # ユーザが配信を開始したにゃ
+    #     channel = discord.utils.get(member.guild.text_channels, name='catgmt')
+    #     if channel:
+    #         await channel.send(f"{member.mention}、何を配信してるにゃ？")
 
 
 def callCatGMT(prompt: list[dict]) -> str:
