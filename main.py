@@ -93,7 +93,7 @@ async def on_message(message):
                 roll.append(value)
                 sum += value
             rollstr = "+".join(str(num) for num in roll)
-            await message.channel.send(f"🎲 {rollstr} = {sum} にゃ！")
+            await message.channel.send(f"🎲 [{rollstr}] = {sum} にゃ！")
         except (ValueError, IndexError):
             await message.channel.send("正しい形式にゃ: NdM （例: 2d6）")
             return
