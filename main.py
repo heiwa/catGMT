@@ -80,7 +80,7 @@ async def on_message(message):
         if len(args) != 1:
             await message.channel.send("使い方にゃ: /dice NdM （例: /dice 2d6）")
             return
-        n = args[0].sprit("d")
+        n = args[0].split("d")
         try:
             num_dice = int(n[0])
             num_sides = int(n[1])
