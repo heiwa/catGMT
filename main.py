@@ -4,6 +4,7 @@ import discord
 from openai import OpenAI
 # import env
 import os
+import random
 
 print("環境変数一覧:", list(os.environ.keys()))
 
@@ -73,6 +74,29 @@ async def on_message(message):
         prompt = await createMessageFromHistory(message.channel, message.content)
         resp = callCatGMT(prompt)
         await message.channel.send(resp)
+
+    if message.content.startswith('/dice'):
+        args = message.content.split()[1:]  # コマンド部分を除いた引数リスト
+        if len(args) != 1:
+            await message.channel.send("使い方にゃ: /dice NdM （例: /dice 2d6）")
+            return
+        n = args[0].sprit("d")
+        try:
+            num_dice = int(n[0])
+            num_sides = int(n[1])
+            if num_dice <= 0 or num_sides <= 0:
+                raise ValueError
+            roll = []
+            sum = 0
+            for _ in range(num_dice):
+                value = random.randint(1, num_sides)
+                roll.append(value)
+                sum += value
+            rollstr = "+".join(str(num) for num in roll)
+            await message.channel.send(f"🎲 {rollstr} = {sum} にゃ！")
+        except (ValueError, IndexError):
+            await message.channel.send("正しい形式にゃ: NdM （例: 2d6）")
+            return
 
 # @bot.event
 # async def on_voice_state_update(member, before, after):
