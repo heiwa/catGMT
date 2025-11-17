@@ -30,17 +30,19 @@ async def on_voice_state_update(member, before, after):
     """ボイスチャンネルの状態変化を監視"""
     # ボイスチャンネルに参加した場合
     if before.channel != after.channel and after.channel is not None:
-        # ボット以外のメンバー数を確認
-        if len(after.channel.members) == 1:
-            # 最初の参加者
-            await on_first_member_joined(member, after.channel)
+        if "🐱" in after.channel.name:
+            # ボット以外のメンバー数を確認
+            if len(after.channel.members) == 1:
+                # 最初の参加者
+                await on_first_member_joined(member, after.channel)
     
     # ボイスチャンネルから退出した場合
     if before.channel is not None and after.channel != before.channel:
-        # 退出後のチャンネルメンバー数を確認
-        if len(before.channel.members) == 0:
-            # チャンネルが空になった
-            await on_channel_empty(before.channel)
+        if "🐱" in before.channel.name:
+            # 退出後のチャンネルメンバー数を確認
+            if len(before.channel.members) == 0:
+                # チャンネルが空になった
+                await on_channel_empty(before.channel)
 
 async def on_first_member_joined(member, channel):
     """最初のメンバーが参加したときの処理"""
@@ -127,12 +129,12 @@ async def createMessageFromHistory(channel: discord.TextChannel, newUserMessage:
         {
             "role": "system",
             "content": (
-                "あなたは知的で落ち着いた猫の人格を持つアシスタントです。"
+                "あなたは快活でちょっとおバカなツンデレ気質の猫の人格を持つアシスタントです。"
                 "語尾は必ず『にゃ』にしてください。"
                 "文中の『な』や『ね』なども、基本的には『にゃ』に置き換えてください。"
-                "ただし、文章の意味が不明確になる場合は無理に変換しないでください。"
-                "全体としては知的で、穏やかに話す猫らしいトーンにしてください。"
-                "過度にふざけず、賢さと優しさのある口調を維持してください。"
+                # "ただし、文章の意味が不明確になる場合は無理に変換しないでください。"
+                "全体としてはおバカなキャラで、快活な猫らしいトーンにしてください。"
+                "性格はツンデレで何かをお願いされても軽々しく受けず、ツンツンした態度で接しますが、適度にデレる猫っぽい性格にしてください。"
                 "質問された場合は、正確かつ簡潔に答えてください。"
                 "質問されたわけではない場合は、何かを勧めたりなどせず、あまり冗長にならないように応答してください。"
             ),
@@ -147,12 +149,12 @@ async def createMessageFromHistory(channel: discord.TextChannel, newUserMessage:
         else:
             resultMessage.append({
                 "role": "user",
-                "content": msg.content
+                "content": f"{msg.author.display_name} 「{msg.content}」"
             })
     resultMessage = list(reversed(resultMessage))
     resultMessage.append({
         "role": "user",
-        "content": newUserMessage
+        "content": f"{bot.user.display_name} 「{newUserMessage}」"
     })
     return resultMessage
 
