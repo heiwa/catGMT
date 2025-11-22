@@ -99,6 +99,19 @@ async def on_message(message):
         except (ValueError, IndexError):
             await message.channel.send("正しい形式にゃ: NdM （例: 2d6）")
             return
+    if message.content.startswith('/team'):
+        voiceState = message.author.voice
+        if voiceState and voiceState.channel:
+            members = voiceState.channel.members
+            memberNames = [member.display_name for member in members if not member.bot]
+            nMembers = len(memberNames)
+            random.shuffle(memberNames)
+            response = "チームわけにゃ！\n"
+            for i in range(nMembers//5):
+                response += f"チーム{(i+1)}：" + ",".join(memberNames[(i*5):((i+1)*5)]) + "\n"
+            await message.channel.send(response)
+        else:
+            await message.channel.send("ボイスチャンネルに参加しているときに使ってにゃ！")
 
 # @bot.event
 # async def on_voice_state_update(member, before, after):
