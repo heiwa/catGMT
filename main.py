@@ -118,6 +118,9 @@ async def on_message(message):
             members = voiceState.channel.members
             memberNames = [member.display_name for member in members if not member.bot]
             nMembers = len(memberNames)
+            if nMembers//n == 0:
+                await message.channel.send("チームわける必要ないにゃ！仲良く遊ぶにゃ！")
+                return
             random.shuffle(memberNames)
             response = "チームわけにゃ！\n"
             for i in range(nMembers//n):
