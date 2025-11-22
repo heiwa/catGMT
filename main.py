@@ -99,7 +99,20 @@ async def on_message(message):
         except (ValueError, IndexError):
             await message.channel.send("正しい形式にゃ: NdM （例: 2d6）")
             return
+    
     if message.content.startswith('/team'):
+        args = message.content.split()[1:]  # コマンド部分を除いた引数リスト
+        if len(args) > 1:
+            await message.channel.send("使い方にゃ: /team n （例: /team 3  ... 3人チームでわける(デフォルトn=5）")
+            return
+        n = 5
+        if len(args) == 1:
+            try:
+                n = int(args[0])
+            except ValueError:
+                await message.channel.send("使い方にゃ: /team n （例: /team 3  ... 3人チームでわける(デフォルトn=5）")
+                return
+        
         voiceState = message.author.voice
         if voiceState and voiceState.channel:
             members = voiceState.channel.members
@@ -107,8 +120,8 @@ async def on_message(message):
             nMembers = len(memberNames)
             random.shuffle(memberNames)
             response = "チームわけにゃ！\n"
-            for i in range(nMembers//5):
-                response += f"チーム{(i+1)}：" + ",".join(memberNames[(i*5):((i+1)*5)]) + "\n"
+            for i in range(nMembers//n):
+                response += f"チーム{(i+1)}：" + ",".join(memberNames[(i*n):((i+1)*n)]) + "\n"
             await message.channel.send(response)
         else:
             await message.channel.send("ボイスチャンネルに参加しているときに使ってにゃ！")
