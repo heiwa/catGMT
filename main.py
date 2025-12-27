@@ -5,6 +5,9 @@ from openai import OpenAI
 # import env
 import os
 import random
+import asyncio
+from datetime import datetime
+import feedparser
 
 print("環境変数一覧:", list(os.environ.keys()))
 
@@ -21,9 +24,85 @@ if not api_key:
 
 client = OpenAI(api_key=api_key)
 
+SCHEDULED_CHANNEL_NAME = "catgmt"  # 発言するチャンネル名
+NEWS_RSS_URL = "https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja"  # GoogleニュースのRSSフィード
+
+def createMessageOfToday() -> str:
+    news_items = fetch_latest_news(limit=1)
+    for news in news_items:            
+        # コメントを生成
+        comment = generate_news_comment(news['title'], news['description'])
+    return comment
+
+def fetch_latest_news(limit=5):
+    """最新のニュースを取得する"""
+    try:
+        feed = feedparser.parse(NEWS_RSS_URL)
+        news_items = []
+        for entry in feed.entries[:limit]:
+            news_items.append({
+                'title': entry.title,
+                'link': entry.link,
+                'description': entry.get('description', '')
+            })
+        return news_items
+    except Exception as e:
+        print(f"ニュース取得エラー: {e}")
+        return []
+
+def generate_news_comment(news_title: str, news_description: str) -> str:
+    """ニュースに対するコメントをCatGMTに生成させる"""
+    try:
+        prompt = [
+            {
+                "role": "system",
+                "content": (
+                    "あなたはちょっとおバカなクーデレ気質の猫の人格を持つアシスタントです。"
+                    "語尾は必ず『にゃ』にしてください。"
+                    "文中の『な』や『ね』なども、基本的には『にゃ』に置き換えてください。"
+                    "全体としてはおバカなキャラで、クールな猫らしいトーンにしてください。"
+                    "性格はクーデレで、適度にデレる猫っぽい性格にしてください。"
+                    "ニュースに対して簡潔に（1-2文で）コメントしてください。"
+                ),
+            },
+            {
+                "role": "user",
+                "content": f"次のニュースについてコメントして。 タイトル：{news_title}　説明：{news_description}"
+            }
+        ]
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=prompt,
+            max_tokens=150
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        print(f"コメント生成エラー: {e}")
+        return "ふーん、そうにゃんだ...（興味なさそう）"
+
+async def scheduled_message_task():
+    """定期的にメッセージを送信するタスク"""
+    await bot.wait_until_ready()
+    
+    while not bot.is_closed():
+        now = datetime.now()
+        
+        # 現在時刻が設定時刻と一致する場合（±30秒以内）
+        if now.hour == 0:
+            text = createMessageOfToday()
+            for guild in bot.guilds:
+                channel = discord.utils.get(guild.text_channels, name=SCHEDULED_CHANNEL_NAME)
+                if channel:
+                    await channel.send(text)
+        
+        # 10分ごとにチェック
+        await asyncio.sleep(600)
+
 @bot.event
 async def on_ready():
     print(f'We have logged in as {bot.user}')
+    # 定期発言タスクを起動
+    # bot.loop.create_task(scheduled_message_task())
 
 @bot.event
 async def on_voice_state_update(member, before, after):
@@ -77,6 +156,11 @@ async def on_message(message):
         resp = callCatGMT(prompt)
         await message.channel.send(resp)
 
+    if message.content.startswith('/news'):
+        text = createMessageOfToday()
+        await message.channel.send(text)
+        return
+    
     if message.content.startswith('/dice'):
         args = message.content.split()[1:]  # コマンド部分を除いた引数リスト
         if len(args) != 1:
