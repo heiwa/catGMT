@@ -29,6 +29,7 @@ NEWS_RSS_URL = "https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja"  # Googleニ
 
 def createMessageOfToday() -> str:
     news_items = fetch_latest_news(limit=1)
+    print(f"取得したニュース: {news_items[0]['title']}, {news_items[0]['description']}")
     for news in news_items:            
         # コメントを生成
         comment = generate_news_comment(news['title'], news['description'])
