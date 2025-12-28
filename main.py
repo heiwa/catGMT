@@ -27,8 +27,10 @@ if not gnews_key:
 
 client = OpenAI(api_key=api_key)
 
-SCHEDULED_CHANNEL_NAME = "catgmt"  # 発言するチャンネル名
-NEWS_RSS_URL = "https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja"  # GoogleニュースのRSSフィード
+SCHEDULED_CHANNEL_NAME = "政治"  # 発言するチャンネル名
+
+# 最後にメッセージを送信した日付を記録
+last_message_date = None
 
 def createMessageOfToday() -> str:
     news_items = fetch_latest_news(limit=1)
@@ -97,18 +99,22 @@ def generate_news_comment(news_title: str, news_url: str, news_description: str)
 
 async def scheduled_message_task():
     """定期的にメッセージを送信するタスク"""
+    global last_message_date
     await bot.wait_until_ready()
     
     while not bot.is_closed():
         now = datetime.now()
+        today = now.date()
         
-        # 現在時刻が設定時刻と一致する場合（±30秒以内）
-        if now.hour == 0:
+        # 午前0時台で、かつ今日まだ送信していない場合のみ送信
+        if now.hour == 0 and last_message_date != today:
             text = createMessageOfToday()
             for guild in bot.guilds:
                 channel = discord.utils.get(guild.text_channels, name=SCHEDULED_CHANNEL_NAME)
                 if channel:
                     await channel.send(text)
+            # 送信完了後、今日の日付を記録
+            last_message_date = today
         
         # 10分ごとにチェック
         await asyncio.sleep(600)
@@ -117,7 +123,7 @@ async def scheduled_message_task():
 async def on_ready():
     print(f'We have logged in as {bot.user}')
     # 定期発言タスクを起動
-    # bot.loop.create_task(scheduled_message_task())
+    bot.loop.create_task(scheduled_message_task())
 
 @bot.event
 async def on_voice_state_update(member, before, after):
@@ -171,10 +177,10 @@ async def on_message(message):
         resp = callCatGMT(prompt)
         await message.channel.send(resp)
 
-    if message.content.startswith('/news'):
-        text = createMessageOfToday()
-        await message.channel.send(text)
-        return
+    # if message.content.startswith('/news'):
+    #     text = createMessageOfToday()
+    #     await message.channel.send(text)
+    #     return
     
     if message.content.startswith('/dice'):
         args = message.content.split()[1:]  # コマンド部分を除いた引数リスト
