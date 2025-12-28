@@ -2,3 +2,4 @@ discord.py
 openai
 feedparser
 httpx
+requests
