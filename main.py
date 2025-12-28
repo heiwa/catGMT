@@ -7,7 +7,6 @@ import os
 import random
 import asyncio
 from datetime import datetime
-#import feedparser
 import requests
 
 print("環境変数一覧:", list(os.environ.keys()))
@@ -36,55 +35,37 @@ def createMessageOfToday() -> str:
     print(f"取得したニュース: {news_items[0]['title']}, {news_items[0]['description']}")
     for news in news_items:            
         # コメントを生成
-        comment = generate_news_comment(news['title'], news['description'])
+        comment = generate_news_comment(news['title'], news['link'], news['description'])
     return comment
 
 def fetch_latest_news(limit=5):
     """最新のニュースを取得する"""
     url = "https://gnews.io/api/v4/search"
     params = {
-        "q": "政治",     # 政治関連キーワード
+        "q": "政治 OR 国会",     # 政治関連キーワード
         "lang": "ja",        # 日本語ニュース（英語なら "en"）
         "country": "jp",     # 日本のニュース
-        "max": 2,           # 取得件数（最大10）
+        "max": 1,           # 取得件数（最大1）
         "sortby": "publishedAt",  # 新しい順
         "apikey": gnews_key
     }
 
     response = requests.get(url, params=params)
     data = response.json()
-    print("ニュースAPIレスポンス:", data)
+    # print("ニュースAPIレスポンス:", data)
 
     news_items = []
     # 結果表示
     for article in data.get("articles", []):
-        print("タイトル:", article["title"])
-        print("媒体:", article["source"]["name"])
-        print("公開日時:", article["publishedAt"])
-        print("URL:", article["url"])
-        print("-" * 40)
         news_items.append({
             'title': article["title"],
-            'description': article["url"]
+            'link': article["url"],
+            'description': article["content"]
         })
 
     return news_items
-#    try:
-#        feed = feedparser.parse(NEWS_RSS_URL)
-#        news_items = []
-#        for entry in feed.entries[:limit]:
-#            news_items.append({
-#                'title': entry.title,
-#                'link': entry.link,
-#                'description': entry.get('description', '')
-#            })
-#        return news_items
-#    except Exception as e:
-#        print(f"ニュース取得エラー: {e}")
-#        return []
-#
 
-def generate_news_comment(news_title: str, news_description: str) -> str:
+def generate_news_comment(news_title: str, news_url: str, news_description: str) -> str:
     """ニュースに対するコメントをCatGMTに生成させる"""
     try:
         prompt = [
@@ -105,11 +86,11 @@ def generate_news_comment(news_title: str, news_description: str) -> str:
             }
         ]
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-5",
             messages=prompt,
-            max_tokens=150
+            # max_tokens=150
         )
-        return response.choices[0].message.content
+        return f"ニュースタイトル：{news_title}\nURL：{news_url}\nGMTコメント：{response.choices[0].message.content}"
     except Exception as e:
         print(f"コメント生成エラー: {e}")
         return "ふーん、そうにゃんだ...（興味なさそう）"
