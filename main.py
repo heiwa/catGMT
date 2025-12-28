@@ -43,7 +43,7 @@ def fetch_latest_news(limit=5):
     """最新のニュースを取得する"""
     url = "https://gnews.io/api/v4/search"
     params = {
-        "q": "politics",     # 政治関連キーワード
+        "q": "政治",     # 政治関連キーワード
         "lang": "ja",        # 日本語ニュース（英語なら "en"）
         "country": "jp",     # 日本のニュース
         "max": 2,           # 取得件数（最大10）
@@ -54,7 +54,7 @@ def fetch_latest_news(limit=5):
     response = requests.get(url, params=params)
     data = response.json()
     print("ニュースAPIレスポンス:", data)
-    
+
     news_items = []
     # 結果表示
     for article in data.get("articles", []):
