@@ -53,7 +53,8 @@ def fetch_latest_news(limit=5):
 
     response = requests.get(url, params=params)
     data = response.json()
-
+    print("ニュースAPIレスポンス:", data)
+    
     news_items = []
     # 結果表示
     for article in data.get("articles", []):
