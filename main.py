@@ -195,6 +195,12 @@ async def on_message(message):
         await message.channel.send(text)
         return
     
+    if message.content.startswith('/clear'):
+        global posted_news_urls
+        posted_news_urls.clear()
+        await message.channel.send("投稿済みニュースの履歴をクリアしたにゃ！")
+        return
+    
     if message.content.startswith('/dice'):
         args = message.content.split()[1:]  # コマンド部分を除いた引数リスト
         if len(args) != 1:
