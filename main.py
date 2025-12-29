@@ -65,7 +65,7 @@ def fetch_latest_news(limit=5):
         "q": "政治 OR 国会",     # 政治関連キーワード
         "lang": "ja",        # 日本語ニュース（英語なら "en"）
         "country": "jp",     # 日本のニュース
-        "max": limit,           # 取得件数
+        "max": 1,           # 取得件数
         "sortby": "publishedAt",  # 新しい順
         "apikey": gnews_key
     }
@@ -111,11 +111,13 @@ def generate_news_comment(news_title: str, news_url: str, news_description: str)
                 "content": f"次のニュースについてコメントして。 タイトル：{news_title}　説明：{news_description}"
             }
         ]
+        print(f"プロンプトの生成に成功")
         response = client.chat.completions.create(
             model="gpt-5",
             messages=prompt,
             # max_tokens=150
-        )            
+        )
+        print(f"コメントの生成に成功")
         # 投稿済みリストに追加
         posted_news_urls.add(news_url['link'])
 
