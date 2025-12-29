@@ -36,12 +36,26 @@ last_message_date = None
 posted_news_urls = set()
 
 def createMessageOfToday() -> str:
-    news_items = fetch_latest_news(1)
-    # print(f"取得したニュース: {news_items[0]['title']}, {news_items[0]['description']}")            
+    global posted_news_urls
     
-    # コメントを生成
-    comment = generate_news_comment(news_items[0]['title'], news_items[0]['link'], news_items[0]['description'])
-    return comment
+    # 最大10件取得して、未投稿のニュースを探す
+    news_items = fetch_latest_news(limit=1)
+    
+    if not news_items:
+        return "ニュースが取得できなかったにゃ...（残念そう）"
+    
+    for news in news_items:
+        if news['link'] not in posted_news_urls:
+            # 未投稿のニュースを発見
+            comment = generate_news_comment(news['title'], news['link'], news['description'])
+            
+            # 投稿済みリストに追加
+            posted_news_urls.add(news['link'])
+            
+            return comment
+    
+    # すべて投稿済みの場合
+    return "今日は新しいニュースがないにゃ...（つまらなさそう）"
 
 
 def fetch_latest_news(limit=5):
