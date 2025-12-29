@@ -190,10 +190,10 @@ async def on_message(message):
         resp = callCatGMT(prompt)
         await message.channel.send(resp)
 
-    # if message.content.startswith('/news'):
-    #     text = createMessageOfToday()
-    #     await message.channel.send(text)
-    #     return
+    if message.content.startswith('/news'):
+        text = createMessageOfToday()
+        await message.channel.send(text)
+        return
     
     if message.content.startswith('/dice'):
         args = message.content.split()[1:]  # コマンド部分を除いた引数リスト
