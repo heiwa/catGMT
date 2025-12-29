@@ -36,7 +36,7 @@ last_message_date = None
 posted_news_urls = set()
 
 def createMessageOfToday() -> str:
-    news_items = fetch_latest_news(limit=1)
+    news_items = fetch_latest_news(1)
     # print(f"取得したニュース: {news_items[0]['title']}, {news_items[0]['description']}")            
     
     # コメントを生成
