@@ -111,15 +111,13 @@ def generate_news_comment(news_title: str, news_url: str, news_description: str)
                 "content": f"次のニュースについてコメントして。 タイトル：{news_title}　説明：{news_description}"
             }
         ]
-        print(f"プロンプトの生成に成功")
         response = client.chat.completions.create(
             model="gpt-5",
             messages=prompt,
             # max_tokens=150
         )
-        print(f"コメントの生成に成功")
         # 投稿済みリストに追加
-        posted_news_urls.add(news_url['link'])
+        posted_news_urls.add(news_url)
 
         return f"ニュースタイトル：{news_title}\nURL：{news_url}\nGMTコメント：{response.choices[0].message.content}"
     except Exception as e:
