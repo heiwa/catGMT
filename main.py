@@ -32,13 +32,17 @@ SCHEDULED_CHANNEL_NAME = "政治"  # 発言するチャンネル名
 # 最後にメッセージを送信した日付を記録
 last_message_date = None
 
+# 投稿済みニュースのURLを記録（ボット起動中のみ保持）
+posted_news_urls = set()
+
 def createMessageOfToday() -> str:
     news_items = fetch_latest_news(limit=1)
-    print(f"取得したニュース: {news_items[0]['title']}, {news_items[0]['description']}")
-    for news in news_items:            
-        # コメントを生成
-        comment = generate_news_comment(news['title'], news['link'], news['description'])
+    # print(f"取得したニュース: {news_items[0]['title']}, {news_items[0]['description']}")            
+    
+    # コメントを生成
+    comment = generate_news_comment(news_items[0]['title'], news_items[0]['link'], news_items[0]['description'])
     return comment
+
 
 def fetch_latest_news(limit=5):
     """最新のニュースを取得する"""
@@ -47,7 +51,7 @@ def fetch_latest_news(limit=5):
         "q": "政治 OR 国会",     # 政治関連キーワード
         "lang": "ja",        # 日本語ニュース（英語なら "en"）
         "country": "jp",     # 日本のニュース
-        "max": 1,           # 取得件数（最大1）
+        "max": limit,           # 取得件数
         "sortby": "publishedAt",  # 新しい順
         "apikey": gnews_key
     }
@@ -69,6 +73,12 @@ def fetch_latest_news(limit=5):
 
 def generate_news_comment(news_title: str, news_url: str, news_description: str) -> str:
     """ニュースに対するコメントをCatGMTに生成させる"""
+    global posted_news_urls
+    
+    if news_url in posted_news_urls:
+        # すべて投稿済みの場合
+        return "今日は新しいニュースがないにゃ...（つまらなさそう）"
+
     try:
         prompt = [
             {
@@ -91,7 +101,10 @@ def generate_news_comment(news_title: str, news_url: str, news_description: str)
             model="gpt-5",
             messages=prompt,
             # max_tokens=150
-        )
+        )            
+        # 投稿済みリストに追加
+        posted_news_urls.add(news_url['link'])
+
         return f"ニュースタイトル：{news_title}\nURL：{news_url}\nGMTコメント：{response.choices[0].message.content}"
     except Exception as e:
         print(f"コメント生成エラー: {e}")
@@ -107,7 +120,7 @@ async def scheduled_message_task():
         today = now.date()
         
         # 午前0時台で、かつ今日まだ送信していない場合のみ送信
-        if now.hour == 0 and last_message_date != today:
+        if now.hour == 15 and last_message_date != today:
             text = createMessageOfToday()
             for guild in bot.guilds:
                 channel = discord.utils.get(guild.text_channels, name=SCHEDULED_CHANNEL_NAME)
