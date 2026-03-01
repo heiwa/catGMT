@@ -1,5 +1,6 @@
 import os
 import sys
+from collections import defaultdict, deque
 from pathlib import Path
 
 from flask import Flask, abort, request
@@ -15,7 +16,7 @@ from linebot.v3.messaging import (
 from linebot.v3.webhooks import MessageEvent, TextMessageContent
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-from common.gpt import callCatGMT, createPrompt
+from common.gpt import callCatGMT, gomaProfile
 
 channel_access_token = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
 channel_secret = os.getenv("LINE_CHANNEL_SECRET")
@@ -28,6 +29,9 @@ if not channel_secret:
 app = Flask(__name__)
 handler = WebhookHandler(channel_secret)
 configuration = Configuration(access_token=channel_access_token)
+
+MAX_HISTORY = 20
+conversation_histories: dict[str, deque[dict]] = defaultdict(lambda: deque(maxlen=MAX_HISTORY))
 
 
 def is_bot_mentioned(event: MessageEvent) -> bool:
@@ -63,6 +67,26 @@ def should_reply(event: MessageEvent) -> bool:
 	if source_type in {"group", "room"}:
 		return is_bot_mentioned(event)
 	return False
+
+
+def get_conversation_key(event: MessageEvent) -> str:
+	source = event.source
+	source_type = getattr(source, "type", "unknown")
+
+	if source_type == "user":
+		return f"user:{getattr(source, 'user_id', 'unknown')}"
+	if source_type == "group":
+		return f"group:{getattr(source, 'group_id', 'unknown')}"
+	if source_type == "room":
+		return f"room:{getattr(source, 'room_id', 'unknown')}"
+	return "unknown:unknown"
+
+
+def create_prompt_with_history(event: MessageEvent, user_text: str) -> tuple[str, list[dict]]:
+	conversation_key = get_conversation_key(event)
+	history = list(conversation_histories[conversation_key])
+	prompt = [gomaProfile, *history, {"role": "user", "content": user_text}]
+	return conversation_key, prompt
 
 
 def reply_text(reply_token: str, text: str) -> None:
@@ -104,8 +128,10 @@ def handle_text_message(event: MessageEvent):
 	if user_text.strip().lower() in {"/ping", "ping"}:
 		reply = "pong にゃ"
 	else:
-		prompt = createPrompt(user_text)
+		conversation_key, prompt = create_prompt_with_history(event, user_text)
 		reply = callCatGMT(prompt)
+		conversation_histories[conversation_key].append({"role": "user", "content": user_text})
+		conversation_histories[conversation_key].append({"role": "assistant", "content": reply})
 
 	reply_text(event.reply_token, reply)
 
